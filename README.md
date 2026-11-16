@@ -38,6 +38,20 @@ python -m uvicorn backend.main:app --reload
 
 On its first Q&A request, Sentence Transformers downloads `sentence-transformers/all-MiniLM-L6-v2`; internet access is required. The in-memory FAISS index is rebuilt for each question because uploads are intentionally not persisted. The UI shows which retrieval method answered each question. See the [official FAISS install guide](https://github.com/facebookresearch/faiss/blob/main/INSTALL.md).
 
+## Deploy a public demo
+
+Deploy the FastAPI backend as a Render Web Service and the React app as a Vercel project, both connected to this GitHub repository.
+
+### Backend on Render
+
+Use the repository root as the service root directory, `pip install -r requirements.txt` as the build command, and `uvicorn backend.main:app --host 0.0.0.0 --port $PORT` as the start command. Add `GROQ_API_KEY` and `GROQ_MODEL` in the Render service environment. After deploying the frontend, set `CORS_ORIGINS` in Render to its full `https://...vercel.app` origin and redeploy.
+
+### Frontend on Vercel
+
+Import the repository, set the root directory to `frontend`, and add the environment variable `VITE_API_URL` with the Render backend URL (for example, `https://your-service.onrender.com`). Deploy, then copy the Vercel URL to share the demo. Keep the Groq key only in Render; never add it to a `VITE_` variable or commit it.
+
+Render's free web services can sleep after inactivity and may take about a minute to wake up. They have an ephemeral filesystem; this demo processes uploaded PDFs in memory and does not save them. This is a public demo without sign-in, so anyone with the link can make requests to the backend and use its configured Groq API key.
+
 Open the local URL printed by Vite (normally `http://localhost:5173`). The API docs are available at `http://localhost:8000/docs`. The ingestion functions are in `src/contract_assistant/ingest.py`; retrieval is in `src/contract_assistant/retrieval.py`; upload, summary, and question endpoints are in `backend/main.py`. This stage handles text-based PDFs. Image-only scanned documents need OCR, which can be added later. Summaries and questions send extracted contract text or retrieved excerpts to Groq. Do not use confidential documents with the hosted API.
 
 For a safe demo document, run `python scripts/create_sample_contract.py` from the project root. It creates `data/sample_contract.pdf` with fictional names and terms.
